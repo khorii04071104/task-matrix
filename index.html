@@ -1,0 +1,2109 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>タスク管理 - アイゼンハワー・マトリックス</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+      }
+
+      .auth-section {
+        padding: 20px;
+        background: #f8f9fa;
+        position: relative;
+      }
+
+      .login-btn {
+        background: #4285f4;
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        font-size: 1.1em;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(66, 133, 244, 0.4);
+      }
+
+      .login-btn:hover {
+        background: #357ae8;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(66, 133, 244, 0.6);
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 15px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+
+      .user-info img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .user-info span {
+        font-size: 1em;
+        font-weight: 500;
+        color: #333;
+        white-space: nowrap;
+      }
+
+      .sync-btn {
+        background: #34a853;
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        font-size: 0.9em;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .sync-btn:hover {
+        background: #2d8f47;
+        transform: translateY(-2px);
+      }
+
+      .logout-btn {
+        background: #ea4335;
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        font-size: 0.9em;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .logout-btn:hover {
+        background: #d33b2c;
+        transform: translateY(-2px);
+      }
+
+      .matrix-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        height: calc(100vh - 120px);
+        min-height: 600px;
+        gap: 2px;
+        background: #ddd;
+      }
+
+      .quadrant {
+        background: white;
+        padding: 10px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: relative;
+        transition: all 0.3s;
+        max-height: 100%;
+      }
+
+      .quadrant #tasks1,
+      .quadrant #tasks2,
+      .quadrant #tasks3,
+      .quadrant #tasks4 {
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-start;
+      }
+
+      .quadrant::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .quadrant::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
+
+      .quadrant::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+
+      .quadrant::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+
+      .quadrant:hover {
+        background: #f8f9fa;
+      }
+
+      .quadrant-header {
+        font-size: 1.3em;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .add-task-btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        margin-left: 10px;
+      }
+
+      .add-task-btn:hover {
+        background: #5a67d8;
+        transform: scale(1.1);
+      }
+
+      .task-creation-form {
+        background: #f8f9fa;
+        border: 2px dashed #667eea;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+        display: none;
+      }
+
+      .task-creation-form.show {
+        display: block;
+      }
+
+      .form-group {
+        margin-bottom: 10px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 0.9em;
+        font-weight: 500;
+        margin-bottom: 5px;
+        color: #333;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9em;
+        font-family: inherit;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 60px;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .form-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.8em;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .form-btn.primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .form-btn.primary:hover {
+        background: #5a67d8;
+      }
+
+      .form-btn.secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+      }
+
+      .form-btn.secondary:hover {
+        background: #cbd5e0;
+      }
+
+      .quadrant-1 {
+        border-color: #e74c3c;
+      }
+
+      .quadrant-1 .quadrant-header {
+        color: #e74c3c;
+      }
+
+      .quadrant-2 {
+        border-color: #3498db;
+      }
+
+      .quadrant-2 .quadrant-header {
+        color: #3498db;
+      }
+
+      .quadrant-3 {
+        border-color: #f39c12;
+      }
+
+      .quadrant-3 .quadrant-header {
+        color: #f39c12;
+      }
+
+      .quadrant-4 {
+        border-color: #95a5a6;
+      }
+
+      .quadrant-4 .quadrant-header {
+        color: #95a5a6;
+      }
+
+      .task-count {
+        background: rgba(0, 0, 0, 0.1);
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.9em;
+      }
+
+      .task-item {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 6px 8px;
+        margin: 4px;
+        cursor: move;
+        transition: all 0.2s;
+        position: relative;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        width: calc(20% - 8px);
+        min-width: 150px;
+        display: inline-block;
+        vertical-align: top;
+      }
+
+      .task-item:hover {
+        border-color: #667eea;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+
+      .task-item.dragging {
+        opacity: 0.5;
+        transform: rotate(2deg);
+      }
+
+      .task-item.drag-over {
+        border-color: #667eea;
+        background: #f0f4ff;
+      }
+
+      .task-title {
+        font-size: 0.75em;
+        font-weight: 500;
+        margin-bottom: 4px;
+        color: #333;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .task-notes {
+        font-size: 0.65em;
+        color: #666;
+        margin-bottom: 4px;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .task-due {
+        font-size: 0.6em;
+        color: #999;
+        margin-bottom: 4px;
+      }
+
+      .task-actions {
+        display: flex;
+        gap: 4px;
+        margin-top: 4px;
+      }
+
+      .complete-btn {
+        background: #34a853;
+        color: white;
+        border: none;
+        padding: 2px 8px;
+        font-size: 0.6em;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .complete-btn:hover {
+        background: #2d8f47;
+        transform: scale(1.05);
+      }
+
+      .edit-btn {
+        background: #f39c12;
+        color: white;
+        border: none;
+        padding: 2px 8px;
+        font-size: 0.6em;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-left: 4px;
+      }
+
+      .edit-btn:hover {
+        background: #e67e22;
+        transform: scale(1.05);
+      }
+
+      .task-item.editing {
+        background: #fff3cd;
+        border: 2px solid #f39c12;
+      }
+
+      .task-edit-form {
+        display: none;
+        padding: 8px;
+        background: #fff3cd;
+        border-radius: 4px;
+        margin: 4px 0;
+      }
+
+      .task-edit-form.show {
+        display: block;
+      }
+
+      .task-edit-input {
+        width: 100%;
+        padding: 4px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-size: 0.75em;
+        margin-bottom: 4px;
+        font-family: inherit;
+      }
+
+      .task-edit-textarea {
+        width: 100%;
+        padding: 4px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-size: 0.65em;
+        margin-bottom: 4px;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 40px;
+      }
+
+      .task-edit-actions {
+        display: flex;
+        gap: 4px;
+        justify-content: flex-end;
+      }
+
+      .task-edit-btn {
+        padding: 3px 8px;
+        border: none;
+        border-radius: 3px;
+        font-size: 0.6em;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .task-edit-btn.save {
+        background: #28a745;
+        color: white;
+      }
+
+      .task-edit-btn.save:hover {
+        background: #218838;
+      }
+
+      .task-edit-btn.cancel {
+        background: #6c757d;
+        color: white;
+      }
+
+      .task-edit-btn.cancel:hover {
+        background: #5a6268;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+        font-size: 1.1em;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #667eea;
+        font-size: 1.2em;
+      }
+
+      .error {
+        background: #fee;
+        color: #c33;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px;
+        text-align: center;
+      }
+
+      /* モーダルポップアップ */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .modal-overlay.show {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        position: relative;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .modal-title {
+        font-size: 1.5em;
+        font-weight: 600;
+        color: #333;
+        flex: 1;
+      }
+
+      .modal-close {
+        background: #ea4335;
+        color: white;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        flex-shrink: 0;
+      }
+
+      .modal-close:hover {
+        background: #d33b2c;
+        transform: scale(1.1);
+      }
+
+      .modal-body {
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .modal-section {
+        margin-bottom: 20px;
+      }
+
+      .modal-section-label {
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 8px;
+        font-size: 0.9em;
+      }
+
+      .modal-section-content {
+        color: #666;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .modal-due {
+        color: #999;
+        font-size: 0.9em;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 10px;
+        }
+
+        .container {
+          border-radius: 10px;
+        }
+
+        .auth-section {
+          padding: 15px;
+        }
+
+        .user-info {
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .matrix-container {
+          grid-template-columns: 1fr;
+          grid-template-rows: repeat(4, auto);
+          height: auto;
+          min-height: auto;
+          gap: 10px;
+        }
+
+        .quadrant {
+          min-height: 200px;
+          max-height: none;
+          padding: 15px;
+        }
+
+        .quadrant-header {
+          font-size: 1.1em;
+          margin-bottom: 10px;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .task-item {
+          width: 100%;
+          min-width: auto;
+          margin: 5px 0;
+        }
+
+        .task-title {
+          font-size: 0.85em;
+        }
+
+        .task-notes {
+          font-size: 0.75em;
+        }
+
+        .task-due {
+          font-size: 0.7em;
+        }
+
+        .add-task-btn {
+          width: 20px;
+          height: 20px;
+          font-size: 1em;
+        }
+
+        .task-creation-form {
+          padding: 10px;
+          margin: 5px 0;
+        }
+
+        .form-group input,
+        .form-group textarea {
+          font-size: 16px; /* iOS zoom prevention */
+        }
+
+        .task-edit-input,
+        .task-edit-textarea {
+          font-size: 16px; /* iOS zoom prevention */
+        }
+
+        .task-actions {
+          gap: 6px;
+        }
+
+        .complete-btn,
+        .edit-btn {
+          padding: 4px 10px;
+          font-size: 0.7em;
+        }
+
+        .modal-content {
+          margin: 20px;
+          max-height: calc(100vh - 40px);
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 5px;
+        }
+
+        .quadrant {
+          min-height: 150px;
+          padding: 10px;
+        }
+
+        .quadrant-header {
+          font-size: 1em;
+        }
+
+        .task-item {
+          padding: 8px;
+        }
+
+        .task-title {
+          font-size: 0.8em;
+        }
+
+        .task-notes {
+          font-size: 0.7em;
+        }
+
+        .complete-btn,
+        .edit-btn {
+          padding: 3px 8px;
+          font-size: 0.65em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="auth-section" id="authSection">
+        <div id="loginArea">
+          <button class="login-btn" onclick="handleAuthClick()">
+            Googleアカウントでログイン
+          </button>
+        </div>
+        <div id="userArea" style="display: none">
+          <div class="user-info">
+            <img id="userImage" src="" alt="ユーザー画像" />
+            <span id="userName"></span>
+            <button class="sync-btn" onclick="handleSync()">🔄 同期</button>
+            <button class="logout-btn" onclick="handleSignout()">
+              ログアウト
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="errorArea" style="display: none"></div>
+
+      <div class="matrix-container" id="matrixContainer" style="display: none">
+        <div class="quadrant quadrant-1" id="quadrant1" data-quadrant="1">
+          <div class="quadrant-header">
+            <span>🔴 重要かつ緊急</span>
+            <div style="display: flex; align-items: center">
+              <span class="task-count" id="count1">0</span>
+              <button
+                class="add-task-btn"
+                onclick="showTaskCreationForm(1)"
+                title="タスクを追加"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <div class="task-creation-form" id="taskForm1">
+            <div class="form-group">
+              <label>タスクタイトル *</label>
+              <input
+                type="text"
+                id="taskTitle1"
+                placeholder="今すぐ対応が必要なタスクを入力..."
+              />
+            </div>
+            <div class="form-group">
+              <label>詳細</label>
+              <textarea
+                id="taskNotes1"
+                placeholder="詳細情報（オプション）"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label>期限</label>
+              <input type="date" id="taskDue1" />
+            </div>
+            <div class="form-actions">
+              <button
+                class="form-btn secondary"
+                onclick="hideTaskCreationForm(1)"
+              >
+                キャンセル
+              </button>
+              <button class="form-btn primary" onclick="createTask(1)">
+                作成
+              </button>
+            </div>
+          </div>
+          <div id="tasks1"></div>
+        </div>
+
+        <div class="quadrant quadrant-2" id="quadrant2" data-quadrant="2">
+          <div class="quadrant-header">
+            <span>🔵 重要だが緊急でない</span>
+            <div style="display: flex; align-items: center">
+              <span class="task-count" id="count2">0</span>
+              <button
+                class="add-task-btn"
+                onclick="showTaskCreationForm(2)"
+                title="タスクを追加"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <div class="task-creation-form" id="taskForm2">
+            <div class="form-group">
+              <label>タスクタイトル *</label>
+              <input
+                type="text"
+                id="taskTitle2"
+                placeholder="長期的な目標に繋がるタスクを入力..."
+              />
+            </div>
+            <div class="form-group">
+              <label>詳細</label>
+              <textarea
+                id="taskNotes2"
+                placeholder="詳細情報（オプション）"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label>期限</label>
+              <input type="date" id="taskDue2" />
+            </div>
+            <div class="form-actions">
+              <button
+                class="form-btn secondary"
+                onclick="hideTaskCreationForm(2)"
+              >
+                キャンセル
+              </button>
+              <button class="form-btn primary" onclick="createTask(2)">
+                作成
+              </button>
+            </div>
+          </div>
+          <div id="tasks2"></div>
+        </div>
+
+        <div class="quadrant quadrant-3" id="quadrant3" data-quadrant="3">
+          <div class="quadrant-header">
+            <span>🟡 重要でないが緊急</span>
+            <div style="display: flex; align-items: center">
+              <span class="task-count" id="count3">0</span>
+              <button
+                class="add-task-btn"
+                onclick="showTaskCreationForm(3)"
+                title="タスクを追加"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <div class="task-creation-form" id="taskForm3">
+            <div class="form-group">
+              <label>タスクタイトル *</label>
+              <input
+                type="text"
+                id="taskTitle3"
+                placeholder="他の人に委任できるタスクを入力..."
+              />
+            </div>
+            <div class="form-group">
+              <label>詳細</label>
+              <textarea
+                id="taskNotes3"
+                placeholder="詳細情報（オプション）"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label>期限</label>
+              <input type="date" id="taskDue3" />
+            </div>
+            <div class="form-actions">
+              <button
+                class="form-btn secondary"
+                onclick="hideTaskCreationForm(3)"
+              >
+                キャンセル
+              </button>
+              <button class="form-btn primary" onclick="createTask(3)">
+                作成
+              </button>
+            </div>
+          </div>
+          <div id="tasks3"></div>
+        </div>
+
+        <div class="quadrant quadrant-4" id="quadrant4" data-quadrant="4">
+          <div class="quadrant-header">
+            <span>⚪ 重要でも緊急でもない</span>
+            <div style="display: flex; align-items: center">
+              <span class="task-count" id="count4">0</span>
+              <button
+                class="add-task-btn"
+                onclick="showTaskCreationForm(4)"
+                title="タスクを追加"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <div class="task-creation-form" id="taskForm4">
+            <div class="form-group">
+              <label>タスクタイトル *</label>
+              <input
+                type="text"
+                id="taskTitle4"
+                placeholder="本当に必要なタスクか検討してください..."
+              />
+            </div>
+            <div class="form-group">
+              <label>詳細</label>
+              <textarea
+                id="taskNotes4"
+                placeholder="詳細情報（オプション）"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label>期限</label>
+              <input type="date" id="taskDue4" />
+            </div>
+            <div class="form-actions">
+              <button
+                class="form-btn secondary"
+                onclick="hideTaskCreationForm(4)"
+              >
+                キャンセル
+              </button>
+              <button class="form-btn primary" onclick="createTask(4)">
+                作成
+              </button>
+            </div>
+          </div>
+          <div id="tasks4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- タスク詳細モーダル -->
+    <div class="modal-overlay" id="taskModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title" id="modalTitle"></div>
+          <button class="modal-close" onclick="closeTaskModal()">×</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
+
+    <script>
+      // ⚠️ ここに取得したクライアントIDを設定してください
+      const CLIENT_ID =
+        "43001239066-v2k8cue54mtsj512bphu24tjksbdm2uo.apps.googleusercontent.com";
+      const DISCOVERY_DOCS = [
+        "https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest",
+      ];
+      const SCOPES = "https://www.googleapis.com/auth/tasks";
+
+      // ローカルストレージのキー
+      const STORAGE_KEY = "taskMatrixQuadrants";
+
+      let gapiInitialized = false;
+      let gisInitialized = false;
+      let tokenClient = null;
+      let tasks = []; // Google Tasksから読み込んだ元のタスク
+      let taskQuadrants = {}; // タスクID -> 象限番号のマッピング（ローカルストレージに保存）
+
+      // Google API スクリプトの読み込み
+      function onGapiLoaded() {
+        gapi.load("client", initializeGapiClient);
+      }
+
+      function onGisLoaded() {
+        try {
+          tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: "", // 後で設定
+          });
+          gisInitialized = true;
+          maybeEnableButtons();
+        } catch (error) {
+          showError(
+            "Google Identity Services の初期化に失敗しました: " + error.message
+          );
+        }
+      }
+
+      async function initializeGapiClient() {
+        try {
+          await gapi.client.init({
+            clientId: CLIENT_ID,
+            discoveryDocs: DISCOVERY_DOCS,
+          });
+          gapiInitialized = true;
+          maybeEnableButtons();
+        } catch (error) {
+          showError(
+            "Google API クライアントの初期化に失敗しました: " + error.message
+          );
+        }
+      }
+
+      function maybeEnableButtons() {
+        if (gapiInitialized && gisInitialized) {
+          console.log("Google API の初期化が完了しました");
+        }
+      }
+
+      // 認証処理
+      function handleAuthClick() {
+        if (CLIENT_ID === "YOUR_CLIENT_ID_HERE") {
+          showError(
+            "エラー: クライアントIDが設定されていません。index.htmlのCLIENT_IDを設定してください。"
+          );
+          return;
+        }
+
+        if (!gapiInitialized || !gisInitialized) {
+          showError(
+            "Google API の初期化が完了していません。ページを再読み込みしてください。"
+          );
+          return;
+        }
+
+        if (!tokenClient) {
+          showError(
+            "認証クライアントの初期化に失敗しました。ページを再読み込みしてください。"
+          );
+          return;
+        }
+
+        if (typeof google === "undefined" || !google.accounts) {
+          showError(
+            "Google Identity Services が読み込まれていません。ページを再読み込みしてください。"
+          );
+          return;
+        }
+
+        tokenClient.callback = async (resp) => {
+          if (resp.error !== undefined) {
+            showError("認証エラー: " + resp.error);
+            return;
+          }
+          await loadTasks();
+        };
+
+        try {
+          if (gapi.client.getToken() === null) {
+            tokenClient.requestAccessToken({ prompt: "consent" });
+          } else {
+            tokenClient.requestAccessToken({ prompt: "" });
+          }
+        } catch (error) {
+          showError("認証リクエストの送信に失敗しました: " + error.message);
+        }
+      }
+
+      async function handleSignout() {
+        const token = gapi.client.getToken();
+        if (token !== null) {
+          google.accounts.oauth2.revoke(token.access_token);
+          gapi.client.setToken("");
+        }
+        document.getElementById("loginArea").style.display = "block";
+        document.getElementById("userArea").style.display = "none";
+        document.getElementById("matrixContainer").style.display = "none";
+        tasks = [];
+        taskQuadrants = {};
+      }
+
+      // ローカルストレージから象限情報を読み込む
+      function loadQuadrantsFromStorage() {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            taskQuadrants = JSON.parse(stored);
+          } else {
+            taskQuadrants = {};
+          }
+        } catch (error) {
+          console.error("ローカルストレージの読み込みエラー:", error);
+          taskQuadrants = {};
+        }
+      }
+
+      // ローカルストレージに象限情報を保存
+      function saveQuadrantsToStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(taskQuadrants));
+        } catch (error) {
+          console.error("ローカルストレージの保存エラー:", error);
+        }
+      }
+
+      // 同期ボタンの処理
+      async function handleSync() {
+        await loadTasks();
+      }
+
+      // タスクの読み込み
+      async function loadTasks() {
+        try {
+          // まずマトリックスコンテナを表示
+          const matrixContainer = document.getElementById("matrixContainer");
+          if (matrixContainer) {
+            matrixContainer.style.display = "grid";
+            showLoading();
+          }
+
+          // すべてのタスクリストを取得
+          let allTaskLists = [];
+          let nextPageToken = null;
+
+          do {
+            const taskListsResponse = await gapi.client.tasks.tasklists.list({
+              maxResults: 100,
+              pageToken: nextPageToken || undefined,
+            });
+
+            if (taskListsResponse.result.items) {
+              allTaskLists = allTaskLists.concat(
+                taskListsResponse.result.items
+              );
+            }
+            nextPageToken = taskListsResponse.result.nextPageToken;
+          } while (nextPageToken);
+
+          // 4つのマトリックスリストを確認・作成
+          const matrixListNames = [
+            "重要かつ緊急",
+            "重要だが緊急でない",
+            "重要でないが緊急",
+            "重要でも緊急でもない",
+          ];
+
+          // 必要なリストが存在しない場合は作成
+          for (const listName of matrixListNames) {
+            const existingList = allTaskLists.find(
+              (list) => list.title === listName
+            );
+            if (!existingList) {
+              const createResponse = await gapi.client.tasks.tasklists.insert({
+                title: listName,
+              });
+              allTaskLists.push(createResponse.result);
+            }
+          }
+
+          // マトリックス関連のリストからのみタスクを取得
+          let allTasks = [];
+          for (const taskList of allTaskLists) {
+            // マトリックス関連のリストのみを対象とする
+            if (matrixListNames.includes(taskList.title)) {
+              let nextTaskPageToken = null;
+              do {
+                const tasksResponse = await gapi.client.tasks.tasks.list({
+                  tasklist: taskList.id,
+                  showCompleted: false,
+                  showHidden: false,
+                  maxResults: 100,
+                  pageToken: nextTaskPageToken || undefined,
+                });
+
+                if (tasksResponse.result.items) {
+                  // タスクリストIDを各タスクに保存
+                  const tasksWithListId = tasksResponse.result.items.map(
+                    (task) => ({
+                      ...task,
+                      taskListId: taskList.id,
+                      taskListTitle: taskList.title,
+                    })
+                  );
+                  allTasks = allTasks.concat(tasksWithListId);
+                }
+                nextTaskPageToken = tasksResponse.result.nextPageToken;
+              } while (nextTaskPageToken);
+            }
+          }
+
+          tasks = allTasks;
+          // ローカルストレージから象限情報を読み込む
+          loadQuadrantsFromStorage();
+
+          // 同期時：現在読み込まれたタスクの削除マークをリセット
+          // これにより、削除したタスクが同期後に再表示される
+          tasks.forEach((task) => {
+            if (taskQuadrants[task.id] === "deleted") {
+              delete taskQuadrants[task.id];
+            }
+          });
+
+          // タスクリスト名に基づいて象限を自動判定
+          tasks.forEach((task) => {
+            const quadrant = getQuadrantFromTaskListTitle(task.taskListTitle);
+            if (quadrant) {
+              taskQuadrants[task.id] = quadrant;
+            }
+          });
+
+          saveQuadrantsToStorage();
+
+          displayTasks();
+          await displayUserInfo();
+        } catch (error) {
+          hideLoading();
+          showError("タスクの読み込みに失敗しました: " + error.message);
+          console.error("タスク読み込みエラー:", error);
+        }
+      }
+
+      async function displayUserInfo() {
+        try {
+          // Google Identity Services APIでユーザー情報を取得
+          const token = gapi.client.getToken();
+          if (token) {
+            // ユーザー情報を取得するためにOAuth2 userinfoエンドポイントを使用
+            try {
+              const userInfo = await fetch(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                {
+                  headers: {
+                    Authorization: `Bearer ${token.access_token}`,
+                  },
+                }
+              );
+
+              if (userInfo.ok) {
+                const userData = await userInfo.json();
+                const userNameEl = document.getElementById("userName");
+                const userImageEl = document.getElementById("userImage");
+
+                if (userNameEl) {
+                  userNameEl.textContent =
+                    userData.name || userData.email || "ユーザー";
+                }
+                if (userImageEl) {
+                  if (userData.picture) {
+                    userImageEl.src = userData.picture;
+                    userImageEl.style.display = "block";
+                  } else {
+                    userImageEl.style.display = "none";
+                  }
+                }
+              } else {
+                throw new Error("ユーザー情報の取得に失敗しました");
+              }
+            } catch (error) {
+              console.error("ユーザー情報の取得エラー:", error);
+              // ユーザー情報の取得に失敗した場合はデフォルト表示
+              const userNameEl = document.getElementById("userName");
+              const userImageEl = document.getElementById("userImage");
+              if (userNameEl) {
+                userNameEl.textContent = "ユーザー";
+              }
+              if (userImageEl) {
+                userImageEl.style.display = "none";
+              }
+            }
+          } else {
+            // トークンがない場合のデフォルト表示
+            const userNameEl = document.getElementById("userName");
+            const userImageEl = document.getElementById("userImage");
+            if (userNameEl) {
+              userNameEl.textContent = "ユーザー";
+            }
+            if (userImageEl) {
+              userImageEl.style.display = "none";
+            }
+          }
+        } catch (error) {
+          console.error("ユーザー情報の取得エラー:", error);
+          const userNameEl = document.getElementById("userName");
+          const userImageEl = document.getElementById("userImage");
+          if (userNameEl) {
+            userNameEl.textContent = "ユーザー";
+          }
+          if (userImageEl) {
+            userImageEl.style.display = "none";
+          }
+        }
+
+        document.getElementById("loginArea").style.display = "none";
+        document.getElementById("userArea").style.display = "block";
+        document.getElementById("matrixContainer").style.display = "grid";
+      }
+
+      function displayTasks() {
+        // ローディングを非表示
+        hideLoading();
+
+        // 各象限をクリア
+        ["1", "2", "3", "4"].forEach((q) => {
+          const tasksContainer = document.getElementById(`tasks${q}`);
+          if (tasksContainer) {
+            tasksContainer.innerHTML = "";
+          }
+        });
+
+        // タスクを象限に分類（ローカルストレージから取得）
+        // 削除されたタスクや完了済みタスクは表示しない
+        tasks.forEach((task) => {
+          const quadrant = getTaskQuadrant(task.id);
+          if (quadrant && quadrant !== "deleted" && quadrant !== "completed") {
+            addTaskToQuadrant(task, quadrant);
+          }
+          // 象限が設定されていないタスクは表示しない（同期時に分散される）
+        });
+
+        updateCounts();
+        setupDragAndDrop();
+      }
+
+      // タスクリスト名から象限番号を判定する関数
+      function getQuadrantFromTaskListTitle(taskListTitle) {
+        switch (taskListTitle) {
+          case "重要かつ緊急":
+            return "1";
+          case "重要だが緊急でない":
+            return "2";
+          case "重要でないが緊急":
+            return "3";
+          case "重要でも緊急でもない":
+            return "4";
+          default:
+            return null;
+        }
+      }
+
+      function getTaskQuadrant(taskId) {
+        // ローカルストレージから象限情報を取得
+        // 削除されたタスクの場合は"deleted"を返す
+        return taskQuadrants[taskId];
+      }
+
+      function addTaskToQuadrant(task, quadrant) {
+        const container = document.getElementById(`tasks${quadrant}`);
+        const taskElement = createTaskElement(task);
+        container.appendChild(taskElement);
+      }
+
+      function createTaskElement(task) {
+        const div = document.createElement("div");
+        div.className = "task-item";
+        div.draggable = true;
+        div.dataset.taskId = task.id;
+
+        // クリックイベント（ボタンや編集フォーム以外をクリックしたとき）
+        div.addEventListener("click", (e) => {
+          // ボタンや編集フォーム内の要素をクリックした場合はモーダルを開かない
+          if (
+            !e.target.classList.contains("complete-btn") &&
+            !e.target.closest(".complete-btn") &&
+            !e.target.classList.contains("edit-btn") &&
+            !e.target.closest(".edit-btn") &&
+            !e.target.closest(".task-edit-form") &&
+            !e.target.classList.contains("task-edit-btn")
+          ) {
+            showTaskModal(task);
+          }
+        });
+
+        const title = document.createElement("div");
+        title.className = "task-title";
+        title.textContent = task.title || "（タイトルなし）";
+        div.appendChild(title);
+
+        // notesをそのまま表示（QUADRANT情報は含まれていない）
+        if (task.notes) {
+          const notes = document.createElement("div");
+          notes.className = "task-notes";
+          notes.textContent = task.notes;
+          div.appendChild(notes);
+        }
+
+        if (task.due) {
+          const due = document.createElement("div");
+          due.className = "task-due";
+          const dueDate = new Date(task.due);
+          due.textContent = `期限: ${dueDate.toLocaleDateString("ja-JP")}`;
+          div.appendChild(due);
+        }
+
+        const actions = document.createElement("div");
+        actions.className = "task-actions";
+
+        const editBtn = document.createElement("button");
+        editBtn.className = "edit-btn";
+        editBtn.textContent = "編集";
+        editBtn.onclick = (e) => {
+          e.stopPropagation(); // 親要素のクリックイベントを防ぐ
+          startEditTask(task);
+        };
+        actions.appendChild(editBtn);
+
+        const completeBtn = document.createElement("button");
+        completeBtn.className = "complete-btn";
+        completeBtn.textContent = "完了";
+        completeBtn.onclick = (e) => {
+          e.stopPropagation(); // 親要素のクリックイベントを防ぐ
+          completeTask(task.id, task.taskListId);
+        };
+        actions.appendChild(completeBtn);
+
+        div.appendChild(actions);
+
+        // 編集フォームを追加
+        const editForm = document.createElement("div");
+        editForm.className = "task-edit-form";
+        editForm.id = `editForm-${task.id}`;
+
+        editForm.innerHTML = `
+          <input type="text" class="task-edit-input" id="editTitle-${
+            task.id
+          }" value="${escapeHtml(
+          task.title || ""
+        )}" placeholder="タスクタイトル" />
+          <textarea class="task-edit-textarea" id="editNotes-${
+            task.id
+          }" placeholder="詳細">${escapeHtml(task.notes || "")}</textarea>
+          <input type="date" class="task-edit-input" id="editDue-${
+            task.id
+          }" value="${task.due ? task.due.split("T")[0] : ""}" />
+          <div class="task-edit-actions">
+            <button class="task-edit-btn cancel" onclick="cancelEditTask('${
+              task.id
+            }')">キャンセル</button>
+            <button class="task-edit-btn save" onclick="saveEditTask('${
+              task.id
+            }')">保存</button>
+          </div>
+        `;
+
+        // 編集フォーム内のクリックイベントの伝播を防ぐ
+        editForm.addEventListener("click", (e) => {
+          e.stopPropagation();
+        });
+
+        div.appendChild(editForm);
+
+        return div;
+      }
+
+      function updateCounts() {
+        ["1", "2", "3", "4"].forEach((q) => {
+          const count = document.getElementById(`tasks${q}`).children.length;
+          document.getElementById(`count${q}`).textContent = count;
+        });
+      }
+
+      // ドラッグ＆ドロップ
+      function setupDragAndDrop() {
+        const taskItems = document.querySelectorAll(".task-item");
+        const quadrants = document.querySelectorAll(".quadrant");
+
+        taskItems.forEach((item) => {
+          item.addEventListener("dragstart", handleDragStart);
+          item.addEventListener("dragend", handleDragEnd);
+        });
+
+        quadrants.forEach((quadrant) => {
+          quadrant.addEventListener("dragover", handleDragOver);
+          quadrant.addEventListener("drop", handleDrop);
+          quadrant.addEventListener("dragenter", handleDragEnter);
+          quadrant.addEventListener("dragleave", handleDragLeave);
+        });
+      }
+
+      let draggedElement = null;
+
+      function handleDragStart(e) {
+        draggedElement = this;
+        this.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/html", this.innerHTML);
+      }
+
+      function handleDragEnd(e) {
+        this.classList.remove("dragging");
+        document.querySelectorAll(".quadrant").forEach((q) => {
+          q.classList.remove("drag-over");
+        });
+      }
+
+      function handleDragOver(e) {
+        if (e.preventDefault) {
+          e.preventDefault();
+        }
+        e.dataTransfer.dropEffect = "move";
+        return false;
+      }
+
+      function handleDragEnter(e) {
+        this.classList.add("drag-over");
+      }
+
+      function handleDragLeave(e) {
+        this.classList.remove("drag-over");
+      }
+
+      function handleDrop(e) {
+        if (e.stopPropagation) {
+          e.stopPropagation();
+        }
+
+        this.classList.remove("drag-over");
+
+        if (draggedElement != null) {
+          const taskId = draggedElement.dataset.taskId;
+          const newQuadrant = this.dataset.quadrant;
+          const task = tasks.find((t) => t.id === taskId);
+
+          if (task) {
+            // タスクを移動
+            draggedElement.remove();
+            addTaskToQuadrant(task, newQuadrant);
+            updateCounts();
+            setupDragAndDrop();
+
+            // ローカルストレージに保存
+            updateTaskQuadrant(taskId, newQuadrant);
+
+            // Google Tasksでも対応するリストに移動
+            moveTaskToCorrectList(task, newQuadrant);
+          }
+        }
+
+        return false;
+      }
+
+      function updateTaskQuadrant(taskId, quadrant) {
+        // ローカルストレージに象限情報を保存
+        taskQuadrants[taskId] = quadrant;
+        saveQuadrantsToStorage();
+      }
+
+      // 象限番号からタスクリスト名を取得
+      function getTaskListTitleFromQuadrant(quadrant) {
+        switch (quadrant) {
+          case "1":
+            return "重要かつ緊急";
+          case "2":
+            return "重要だが緊急でない";
+          case "3":
+            return "重要でないが緊急";
+          case "4":
+            return "重要でも緊急でもない";
+          default:
+            return null;
+        }
+      }
+
+      // Google Tasksでタスクを正しいリストに移動
+      async function moveTaskToCorrectList(task, newQuadrant) {
+        try {
+          const targetListTitle = getTaskListTitleFromQuadrant(newQuadrant);
+          if (!targetListTitle) return;
+
+          // すべてのタスクリストを取得
+          const taskListsResponse = await gapi.client.tasks.tasklists.list({
+            maxResults: 100,
+          });
+
+          if (!taskListsResponse.result.items) return;
+
+          // 対象のリストを見つける
+          const targetList = taskListsResponse.result.items.find(
+            (list) => list.title === targetListTitle
+          );
+
+          if (!targetList) return;
+
+          // 現在のリストから削除
+          await gapi.client.tasks.tasks.delete({
+            tasklist: task.taskListId,
+            task: task.id,
+          });
+
+          // 新しいリストに追加
+          await gapi.client.tasks.tasks.insert({
+            tasklist: targetList.id,
+            resource: {
+              title: task.title,
+              notes: task.notes,
+              due: task.due,
+            },
+          });
+        } catch (error) {
+          console.error("タスクの移動エラー:", error);
+          // エラーが発生してもUIの更新は継続
+        }
+      }
+
+      async function completeTask(taskId, taskListId) {
+        if (!confirm("このタスクを完了にしますか？")) {
+          return;
+        }
+
+        try {
+          // Google Tasksでタスクを完了状態にする
+          const updateRequest = {
+            tasklist: taskListId,
+            task: taskId,
+            resource: {
+              id: taskId,
+              status: "completed",
+            },
+          };
+
+          await gapi.client.tasks.tasks.update(updateRequest);
+
+          // ローカルからも削除（完了済みタスクは表示しない）
+          taskQuadrants[taskId] = "completed";
+          saveQuadrantsToStorage();
+
+          // 表示を更新
+          displayTasks();
+        } catch (error) {
+          showError(
+            "タスクの完了に失敗しました: " + (error.message || error.toString())
+          );
+          console.error("タスク完了エラー:", error);
+        }
+      }
+
+      function showLoading() {
+        const matrixContainer = document.getElementById("matrixContainer");
+        if (!matrixContainer) return;
+
+        // 既存のローディング要素を削除
+        const existingLoading =
+          matrixContainer.querySelector(".loading-overlay");
+        if (existingLoading) {
+          existingLoading.remove();
+        }
+
+        // ローディングオーバーレイを作成
+        const loadingOverlay = document.createElement("div");
+        loadingOverlay.className = "loading-overlay";
+        loadingOverlay.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(255, 255, 255, 0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          font-size: 1.2em;
+          color: #667eea;
+        `;
+        loadingOverlay.textContent = "タスクを読み込んでいます...";
+        matrixContainer.style.position = "relative";
+        matrixContainer.appendChild(loadingOverlay);
+      }
+
+      function hideLoading() {
+        const matrixContainer = document.getElementById("matrixContainer");
+        if (!matrixContainer) return;
+        const loadingOverlay =
+          matrixContainer.querySelector(".loading-overlay");
+        if (loadingOverlay) {
+          loadingOverlay.remove();
+        }
+      }
+
+      // タスク詳細モーダルを表示
+      function showTaskModal(task) {
+        const modal = document.getElementById("taskModal");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalBody = document.getElementById("modalBody");
+
+        if (!modal || !modalTitle || !modalBody) return;
+
+        // タイトルを設定
+        modalTitle.textContent = task.title || "（タイトルなし）";
+
+        // 本文を構築
+        let bodyHTML = "";
+
+        // 詳細（notes）
+        if (task.notes) {
+          bodyHTML += `
+            <div class="modal-section">
+              <div class="modal-section-label">📝 詳細</div>
+              <div class="modal-section-content">${escapeHtml(task.notes)}</div>
+            </div>
+          `;
+        }
+
+        // 期限
+        if (task.due) {
+          const dueDate = new Date(task.due);
+          bodyHTML += `
+            <div class="modal-section">
+              <div class="modal-section-label">📅 期限</div>
+              <div class="modal-section-content modal-due">${dueDate.toLocaleDateString(
+                "ja-JP",
+                {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  weekday: "long",
+                }
+              )}</div>
+            </div>
+          `;
+        }
+
+        // タスクリスト情報
+        if (task.taskListTitle) {
+          bodyHTML += `
+            <div class="modal-section">
+              <div class="modal-section-label">📋 タスクリスト</div>
+              <div class="modal-section-content">${escapeHtml(
+                task.taskListTitle
+              )}</div>
+            </div>
+          `;
+        }
+
+        // 本文が空の場合はメッセージを表示
+        if (!bodyHTML) {
+          bodyHTML =
+            '<div class="modal-section"><div class="modal-section-content">詳細情報はありません</div></div>';
+        }
+
+        modalBody.innerHTML = bodyHTML;
+
+        // モーダルを表示
+        modal.classList.add("show");
+
+        // 背景クリックで閉じる
+        modal.addEventListener("click", function closeOnOverlay(e) {
+          if (e.target === modal) {
+            closeTaskModal();
+            modal.removeEventListener("click", closeOnOverlay);
+          }
+        });
+
+        // ESCキーで閉じる
+        document.addEventListener("keydown", function closeOnEsc(e) {
+          if (e.key === "Escape") {
+            closeTaskModal();
+            document.removeEventListener("keydown", closeOnEsc);
+          }
+        });
+      }
+
+      // タスク詳細モーダルを閉じる
+      function closeTaskModal() {
+        const modal = document.getElementById("taskModal");
+        if (modal) {
+          modal.classList.remove("show");
+        }
+      }
+
+      // HTMLエスケープ関数
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // タスク作成フォームの表示/非表示
+      function showTaskCreationForm(quadrant) {
+        // 他のフォームを全て非表示
+        for (let i = 1; i <= 4; i++) {
+          const form = document.getElementById(`taskForm${i}`);
+          if (form) {
+            form.classList.remove("show");
+          }
+        }
+
+        // 指定された象限のフォームを表示
+        const form = document.getElementById(`taskForm${quadrant}`);
+        if (form) {
+          form.classList.add("show");
+          // タイトル入力欄にフォーカス
+          const titleInput = document.getElementById(`taskTitle${quadrant}`);
+          if (titleInput) {
+            setTimeout(() => titleInput.focus(), 100);
+          }
+        }
+      }
+
+      function hideTaskCreationForm(quadrant) {
+        const form = document.getElementById(`taskForm${quadrant}`);
+        if (form) {
+          form.classList.remove("show");
+          // フォームをクリア
+          clearTaskForm(quadrant);
+        }
+      }
+
+      function clearTaskForm(quadrant) {
+        const titleInput = document.getElementById(`taskTitle${quadrant}`);
+        const notesInput = document.getElementById(`taskNotes${quadrant}`);
+        const dueInput = document.getElementById(`taskDue${quadrant}`);
+
+        if (titleInput) titleInput.value = "";
+        if (notesInput) notesInput.value = "";
+        if (dueInput) dueInput.value = "";
+      }
+
+      // 新しいタスクを作成
+      async function createTask(quadrant) {
+        const titleInput = document.getElementById(`taskTitle${quadrant}`);
+        const notesInput = document.getElementById(`taskNotes${quadrant}`);
+        const dueInput = document.getElementById(`taskDue${quadrant}`);
+
+        if (!titleInput || !titleInput.value.trim()) {
+          showError("タスクタイトルを入力してください");
+          return;
+        }
+
+        const title = titleInput.value.trim();
+        const notes = notesInput ? notesInput.value.trim() : "";
+        const due = dueInput ? dueInput.value : "";
+
+        try {
+          // 対応するGoogle Tasksリストを取得
+          const targetListTitle = getTaskListTitleFromQuadrant(
+            quadrant.toString()
+          );
+          if (!targetListTitle) {
+            showError("象限に対応するリストが見つかりません");
+            return;
+          }
+
+          // タスクリストを取得
+          const taskListsResponse = await gapi.client.tasks.tasklists.list({
+            maxResults: 100,
+          });
+
+          if (!taskListsResponse.result.items) {
+            showError("タスクリストの取得に失敗しました");
+            return;
+          }
+
+          // 対象のリストを見つける
+          let targetList = taskListsResponse.result.items.find(
+            (list) => list.title === targetListTitle
+          );
+
+          // リストが存在しない場合は作成
+          if (!targetList) {
+            const createResponse = await gapi.client.tasks.tasklists.insert({
+              resource: {
+                title: targetListTitle,
+              },
+            });
+            targetList = createResponse.result;
+          }
+
+          // タスクを作成
+          const taskResource = {
+            title: title,
+          };
+
+          if (notes) {
+            taskResource.notes = notes;
+          }
+
+          if (due) {
+            // 日付をRFC3339形式に変換
+            const dueDate = new Date(due);
+            taskResource.due = dueDate.toISOString();
+          }
+
+          const createTaskResponse = await gapi.client.tasks.tasks.insert({
+            tasklist: targetList.id,
+            resource: taskResource,
+          });
+
+          // 作成されたタスクをローカルのタスク配列に追加
+          const newTask = {
+            ...createTaskResponse.result,
+            taskListId: targetList.id,
+            taskListTitle: targetList.title,
+          };
+
+          tasks.push(newTask);
+
+          // 象限情報を保存
+          taskQuadrants[newTask.id] = quadrant.toString();
+          saveQuadrantsToStorage();
+
+          // 表示を更新
+          displayTasks();
+
+          // フォームを非表示にしてクリア
+          hideTaskCreationForm(quadrant);
+
+          showSuccess("タスクが作成されました");
+        } catch (error) {
+          showError(
+            "タスクの作成に失敗しました: " + (error.message || error.toString())
+          );
+          console.error("タスク作成エラー:", error);
+        }
+      }
+
+      // タスク編集機能
+      function startEditTask(task) {
+        // 他の編集フォームを全て非表示
+        document.querySelectorAll(".task-edit-form.show").forEach((form) => {
+          form.classList.remove("show");
+          const taskItem = form.closest(".task-item");
+          if (taskItem) {
+            taskItem.classList.remove("editing");
+          }
+        });
+
+        // 指定されたタスクの編集フォームを表示
+        const editForm = document.getElementById(`editForm-${task.id}`);
+        const taskItem = editForm.closest(".task-item");
+
+        if (editForm && taskItem) {
+          editForm.classList.add("show");
+          taskItem.classList.add("editing");
+
+          // タイトル入力欄にフォーカス
+          const titleInput = document.getElementById(`editTitle-${task.id}`);
+          if (titleInput) {
+            setTimeout(() => titleInput.focus(), 100);
+          }
+        }
+      }
+
+      function cancelEditTask(taskId) {
+        const editForm = document.getElementById(`editForm-${taskId}`);
+        const taskItem = editForm.closest(".task-item");
+
+        if (editForm && taskItem) {
+          editForm.classList.remove("show");
+          taskItem.classList.remove("editing");
+        }
+      }
+
+      async function saveEditTask(taskId) {
+        const titleInput = document.getElementById(`editTitle-${taskId}`);
+        const notesInput = document.getElementById(`editNotes-${taskId}`);
+        const dueInput = document.getElementById(`editDue-${taskId}`);
+
+        if (!titleInput || !titleInput.value.trim()) {
+          showError("タスクタイトルを入力してください");
+          return;
+        }
+
+        const title = titleInput.value.trim();
+        const notes = notesInput ? notesInput.value.trim() : "";
+        const due = dueInput ? dueInput.value : "";
+
+        try {
+          // 対象のタスクを見つける
+          const task = tasks.find((t) => t.id === taskId);
+          if (!task) {
+            showError("タスクが見つかりません");
+            return;
+          }
+
+          // Google Tasksでタスクを更新
+          const updateResource = {
+            id: taskId,
+            title: title,
+          };
+
+          if (notes) {
+            updateResource.notes = notes;
+          }
+
+          if (due) {
+            const dueDate = new Date(due);
+            updateResource.due = dueDate.toISOString();
+          }
+
+          await gapi.client.tasks.tasks.update({
+            tasklist: task.taskListId,
+            task: taskId,
+            resource: updateResource,
+          });
+
+          // ローカルのタスク配列も更新
+          const taskIndex = tasks.findIndex((t) => t.id === taskId);
+          if (taskIndex !== -1) {
+            tasks[taskIndex] = {
+              ...tasks[taskIndex],
+              title: title,
+              notes: notes,
+              due: due ? new Date(due).toISOString() : undefined,
+            };
+          }
+
+          // 表示を更新
+          displayTasks();
+
+          showSuccess("タスクが更新されました");
+        } catch (error) {
+          showError(
+            "タスクの更新に失敗しました: " + (error.message || error.toString())
+          );
+          console.error("タスク更新エラー:", error);
+        }
+      }
+
+      function showSuccess(message) {
+        const errorArea = document.getElementById("errorArea");
+        errorArea.innerHTML = `<div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin: 20px; text-align: center;">${message}</div>`;
+        errorArea.style.display = "block";
+        setTimeout(() => {
+          errorArea.style.display = "none";
+        }, 3000);
+      }
+
+      function showError(message) {
+        const errorArea = document.getElementById("errorArea");
+        errorArea.innerHTML = `<div class="error">${message}</div>`;
+        errorArea.style.display = "block";
+        setTimeout(() => {
+          errorArea.style.display = "none";
+        }, 5000);
+      }
+
+      // ページ読み込み時の初期化
+      window.onload = function () {
+        // Google API スクリプトを動的に読み込む
+        const gapiScript = document.createElement("script");
+        gapiScript.src = "https://apis.google.com/js/api.js";
+        gapiScript.onload = () => {
+          if (typeof gapi !== "undefined") {
+            onGapiLoaded();
+          } else {
+            showError("Google API スクリプトの読み込みに失敗しました");
+          }
+        };
+        gapiScript.onerror = () => {
+          showError(
+            "Google API スクリプトの読み込みに失敗しました。ネットワーク接続を確認してください。"
+          );
+        };
+        document.head.appendChild(gapiScript);
+
+        const gisScript = document.createElement("script");
+        gisScript.src = "https://accounts.google.com/gsi/client";
+        gisScript.onload = () => {
+          if (typeof google !== "undefined" && google.accounts) {
+            onGisLoaded();
+          } else {
+            showError(
+              "Google Identity Services スクリプトの読み込みに失敗しました"
+            );
+          }
+        };
+        gisScript.onerror = () => {
+          showError(
+            "Google Identity Services スクリプトの読み込みに失敗しました。ネットワーク接続を確認してください。"
+          );
+        };
+        document.head.appendChild(gisScript);
+
+        // タスク作成フォームのキーボードイベントを設定
+        setupTaskFormKeyboardEvents();
+      };
+
+      // タスク作成フォームのキーボードイベント設定
+      function setupTaskFormKeyboardEvents() {
+        for (let i = 1; i <= 4; i++) {
+          const titleInput = document.getElementById(`taskTitle${i}`);
+          if (titleInput) {
+            titleInput.addEventListener("keydown", function (e) {
+              // IME変換中の場合はEnterキーを無視
+              if (e.key === "Enter" && !e.isComposing) {
+                e.preventDefault();
+                createTask(i);
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                hideTaskCreationForm(i);
+              }
+            });
+
+            // compositionend イベントでIME変換終了を検知
+            titleInput.addEventListener("compositionend", function (e) {
+              // 変換終了後のEnterキーは無視するため、フラグをリセット
+              setTimeout(() => {
+                titleInput.dataset.composing = "false";
+              }, 10);
+            });
+
+            titleInput.addEventListener("compositionstart", function (e) {
+              titleInput.dataset.composing = "true";
+            });
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
