@@ -2220,12 +2220,12 @@
             });
         }
 
-        // インストール促進
+        // インストール促進（バナー非表示）
         let deferredPrompt;
         window.addEventListener("beforeinstallprompt", (e) => {
           e.preventDefault();
           deferredPrompt = e;
-          showInstallPrompt();
+          // showInstallPrompt(); // バナー表示を無効化
         });
 
         // インストール完了時
