@@ -959,7 +959,7 @@
     <script>
       // ⚠️ ここに取得したクライアントIDを設定してください
       const CLIENT_ID =
-        "43001239066-2g8vck1sg5phgd6t8utssr7j5pc00jeg.apps.googleusercontent.com";
+        "43001239066-v2k8cue54mtsj512bphu24tjksbdm2uo.apps.googleusercontent.com";
       const DISCOVERY_DOCS = [
         "https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest",
       ];
@@ -1013,7 +1013,39 @@
       function maybeEnableButtons() {
         if (gapiInitialized && gisInitialized) {
           console.log("Google API の初期化が完了しました");
+          // 初期化完了後に自動ログインを試行
+          tryAutoLogin();
         }
+      }
+
+      // トークンの有効性をチェック
+      function isTokenValid(token) {
+        if (!token || !token.access_token) {
+          return false;
+        }
+
+        // トークンの有効期限をチェック
+        const now = Date.now();
+        const expiresAt = token.expires_at || now + 3600000; // デフォルト1時間
+
+        return now < expiresAt;
+      }
+
+      // 自動ログインを試行
+      async function tryAutoLogin() {
+        try {
+          const token = gapi.client.getToken();
+          if (isTokenValid(token)) {
+            console.log(
+              "有効なトークンが見つかりました。自動ログインを実行します。"
+            );
+            await loadTasks();
+            return true;
+          }
+        } catch (error) {
+          console.log("自動ログインに失敗しました:", error);
+        }
+        return false;
       }
 
       // 認証処理
@@ -1051,6 +1083,14 @@
             showError("認証エラー: " + resp.error);
             return;
           }
+
+          // トークンに有効期限を設定
+          const token = gapi.client.getToken();
+          if (token) {
+            token.expires_at = Date.now() + (resp.expires_in || 3600) * 1000;
+            gapi.client.setToken(token);
+          }
+
           await loadTasks();
         };
 
@@ -1071,6 +1111,14 @@
           google.accounts.oauth2.revoke(token.access_token);
           gapi.client.setToken("");
         }
+
+        // ローカルストレージからも認証情報をクリア
+        try {
+          localStorage.removeItem("gapi.client.token");
+        } catch (error) {
+          console.log("ローカルストレージのクリアに失敗:", error);
+        }
+
         document.getElementById("loginArea").style.display = "block";
         document.getElementById("userArea").style.display = "none";
         document.getElementById("matrixContainer").style.display = "none";
