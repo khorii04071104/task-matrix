@@ -2,8 +2,34 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
     <title>タスク管理 - アイゼンハワー・マトリックス</title>
+
+    <!-- PWA設定 -->
+    <meta name="theme-color" content="#667eea" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="タスクマトリックス" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- アイコン設定 -->
+    <link
+      rel="apple-touch-icon"
+      href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjNjY3ZWVhIiByeD0iMjQiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xOSAzSDVjLTEuMSAwLTIgLjktMiAydjE0YzAgMS4xLjkgMiAyIDJoMTRjMS4xIDAgMi0uOSAyLTJWNWMwLTEuMS0uOS0yLTItMnptLTUgMTRIN3YtMmg3djJ6bTMtNEg3di0yaDEwdjJ6bTAtNEg3VjdoMTB2MnoiLz4KPC9zdmc+Cjwvc3ZnPgo="
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjNjY3ZWVhIiByeD0iNCIvPgo8c3ZnIHg9IjgiIHk9IjgiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xOSAzSDVjLTEuMSAwLTIgLjktMiAydjE0YzAgMS4xLjkgMiAyIDJoMTRjMS4xIDAgMi0uOSAyLTJWNWMwLTEuMS0uOS0yLTItMnptLTUgMTRIN3YtMmg3djJ6bTMtNEg3di0yaDEwdjJ6bTAtNEg3VjdoMTB2MnoiLz4KPC9zdmc+Cjwvc3ZnPgo="
+    />
+
+    <!-- マニフェストファイル -->
+    <link
+      rel="manifest"
+      href="data:application/json;base64,ewogICJuYW1lIjogIuOCv+OCueOCr+euoeeQhuODnuODiOODquODg+OCr+OCuSIsCiAgInNob3J0X25hbWUiOiAi44K/44K544Kv44Oe44OI44Oq44OD44Kv44K5IiwKICAic3RhcnRfdXJsIjogIi4vIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzY2N2VlYSIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU1Ua3lJaUJvWldsbmFIUTlJakU1TWlJZ2RtbGxkMEp2ZUQwaU1DQXdJREU1TWlBeE9USWlJR1pwYkd3OUltNXZibVVpSUhodGJHNXpQU0pvZEhSd09pOHZkM2QzTG5jekxtOXlaeTh5TURBd0wzTjJaeUkrQ2p4eVpXTjBJSGRwWkhSb1BTSXhPVElpSUdobGFXZG9kRDBpTVRreUlpQm1hV3hzUFNJall6WTNaV1ZoSWlCeWVEMGlNalFpTHo0S1BITjJaeUI0UFNJME9DSWdlVDBpTkRnaUlIZHBaSFJvUFNJNU5pSWdhR1ZwWjJoMFBTSTVOaUlnZG1sbGQwSnZlRDBpTUNBd0lESTBJREkwSWlCbWFXeHNQU0ozYUdsMFpTSStDanh3WVhSb0lHUTlTVTB4T1NBelNEVmpMVEV1TVNBM0xUSXVPUzB5SURKMk1UUmpNQ0F4TGpFdU9TQXlJRElnTWlneE5HTXhMakVnTUNBeUxTNDVJRElnTFRKV05XTXdMVEV1TVM0NUxUSXRNaTQ1TFRJdE1ucHRMVFVnTVRSSU4zWXRNbWczZGpKNmJUTXROa2czZGkweWFERXdkako2YlRBdE5FZzNWamQzTW5wdE1DMDBTRGQyTWlJdlBnbzhMM04yWno0S1BDOXpkbWMrQ2c9PSIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0sCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTlRFeUlpQm9aV2xuYUhROUlqVXhNaUlnZG1sbGQwSnZlRDBpTUNBd0lEVXhNaUExTVRJaUlHWnBiR3c5SW01dmJtVWlJSGh0Ykc1elBTSm9kSFJ3T2k4dmQzZDNMbmN6TG05eVp5OHlNREF3TDNOMlp5SStDanh5WldOMElIZHBaSFJvUFNJMU1USWlJR2hsYVdkb2REMGlOVEV5SWlCbWFXeHNQU0lqTmpZM1pXVmhJaUJ5ZUQwaU5EZ2lMejRLUEhOMlp5QjRQU0k0TkNJZ2VUMGlPRFFpSUhkcFpIUm9QU0kxTWpnaUlHaGxhV2RvZEQwaU5USXlJaUIyYVdWM1FtOTRQU0l3SURBZ05USTRJRFV5T0NJZ1ptbHNiRDBpZDJocGRHVWlQZ29nSUNBZ1BIQmhkR2dnWkQxTk5USTRJRGd5U0RJeU5HTXRNVGd1TmlBd0xUTXpMak1nTVRVdU5TMHpNeUF6TW5ZMU1qWmpNQ0F4T0M0MklERTFMalVnTXpNdU15QXpNeUF6TW1neU9EUmpNVGd1TmlBd0lETXpMak10TVRVdU5TQXpNeTR6TFRNeUlETXlWamcyWXkwd01TNDJJREUxTGpVdE16TXVNeUF6TXkwek1tZ3RNVGd5ZGkweE5DNGlMejRLUEM5emRtYytDajh2YzNabkxnPT0iLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9CiAgXQp9"
+    />
     <style>
       * {
         margin: 0;
@@ -17,6 +43,36 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
         padding: 20px;
+        /* PWA用のフルスクリーン対応 */
+        padding-top: env(safe-area-inset-top, 20px);
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+        padding-left: env(safe-area-inset-left, 20px);
+        padding-right: env(safe-area-inset-right, 20px);
+      }
+
+      /* PWAスタンドアロンモード時の調整 */
+      @media (display-mode: standalone) {
+        body {
+          padding: 10px;
+          padding-top: max(10px, env(safe-area-inset-top));
+          padding-bottom: max(10px, env(safe-area-inset-bottom));
+        }
+
+        .container {
+          border-radius: 15px;
+        }
+
+        .auth-section {
+          padding: 10px;
+        }
+      }
+
+      /* iOS Safari用の調整 */
+      @supports (-webkit-touch-callout: none) {
+        body {
+          /* iOS Safariでのビューポート調整 */
+          min-height: -webkit-fill-available;
+        }
       }
 
       .container {
@@ -452,12 +508,17 @@
       }
 
       .task-edit-btn {
-        padding: 3px 8px;
+        padding: 8px 12px;
         border: none;
-        border-radius: 3px;
-        font-size: 0.6em;
+        border-radius: 6px;
+        font-size: 0.7em;
         cursor: pointer;
         transition: all 0.2s;
+        min-width: 44px;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .task-edit-btn.save {
@@ -675,13 +736,20 @@
         }
 
         .task-actions {
-          gap: 6px;
+          gap: 8px;
+          margin-top: 8px;
         }
 
         .complete-btn,
         .edit-btn {
-          padding: 4px 10px;
-          font-size: 0.7em;
+          padding: 10px 14px;
+          font-size: 0.8em;
+          min-width: 48px;
+          min-height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 12px;
         }
 
         .modal-content {
@@ -718,8 +786,19 @@
 
         .complete-btn,
         .edit-btn {
-          padding: 3px 8px;
-          font-size: 0.65em;
+          padding: 8px 12px;
+          font-size: 0.75em;
+          min-width: 44px;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+        }
+
+        .task-actions {
+          gap: 6px;
+          margin-top: 6px;
         }
       }
     </style>
@@ -2120,7 +2199,102 @@
 
         // タスク作成フォームのキーボードイベントを設定
         setupTaskFormKeyboardEvents();
+
+        // PWA機能の初期化
+        initializePWA();
       };
+
+      // PWA機能の初期化
+      function initializePWA() {
+        // サービスワーカーの登録
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .register(
+              "data:application/javascript;base64,Ly8gU2ltcGxlIFNlcnZpY2UgV29ya2VyIGZvciBQV0EKY29uc3QgQ0FDSEVfTkFNRSA9ICd0YXNrLW1hdHJpeC12MSc7CmNvbnN0IHVybHNUb0NhY2hlID0gWwogICcuLycKXTsKCnNlbGYuYWRkRXZlbnRMaXN0ZW5lcignaW5zdGFsbCcsIGV2ZW50ID0+IHsKICBldmVudC53YWl0VW50aWwoCiAgICBjYWNoZXMub3BlbihDQUNIRV9OQU1FKQogICAgICAudGhlbihjYWNoZSA9PiBjYWNoZS5hZGRBbGwodXJsc1RvQ2FjaGUpKQogICk7Cn0pOwoKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIGV2ZW50ID0+IHsKICBldmVudC5yZXNwb25kV2l0aCgKICAgIGNhY2hlcy5tYXRjaChldmVudC5yZXF1ZXN0KQogICAgICAudGhlbihyZXNwb25zZSA9PiByZXNwb25zZSB8fCBmZXRjaChldmVudC5yZXF1ZXN0KSkKICApOwp9KTs="
+            )
+            .then((registration) => {
+              console.log("Service Worker registered:", registration);
+            })
+            .catch((error) => {
+              console.log("Service Worker registration failed:", error);
+            });
+        }
+
+        // インストール促進
+        let deferredPrompt;
+        window.addEventListener("beforeinstallprompt", (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          showInstallPrompt();
+        });
+
+        // インストール完了時
+        window.addEventListener("appinstalled", () => {
+          console.log("PWA was installed");
+          hideInstallPrompt();
+        });
+      }
+
+      // インストール促進の表示
+      function showInstallPrompt() {
+        // モバイルデバイスでのみ表示
+        if (
+          /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          )
+        ) {
+          const installBanner = document.createElement("div");
+          installBanner.id = "install-banner";
+          installBanner.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+          `;
+
+          installBanner.innerHTML = `
+            <span>📱 ホーム画面に追加してアプリのように使用できます</span>
+            <div>
+              <button onclick="installPWA()" style="background: white; color: #667eea; border: none; padding: 8px 12px; border-radius: 5px; margin-right: 8px; cursor: pointer;">追加</button>
+              <button onclick="hideInstallPrompt()" style="background: transparent; color: white; border: 1px solid white; padding: 8px 12px; border-radius: 5px; cursor: pointer;">×</button>
+            </div>
+          `;
+
+          document.body.appendChild(installBanner);
+        }
+      }
+
+      // PWAインストール実行
+      function installPWA() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === "accepted") {
+              console.log("User accepted the install prompt");
+            }
+            deferredPrompt = null;
+            hideInstallPrompt();
+          });
+        }
+      }
+
+      // インストール促進を非表示
+      function hideInstallPrompt() {
+        const banner = document.getElementById("install-banner");
+        if (banner) {
+          banner.remove();
+        }
+      }
 
       // タスク作成フォームのキーボードイベント設定
       function setupTaskFormKeyboardEvents() {
